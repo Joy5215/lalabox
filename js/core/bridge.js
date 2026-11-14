@@ -39,10 +39,17 @@
   }
 
   /* ---------- 麦克风 ---------- */
+  /* 注意：必须在用户手势中同步调用，任何 await/Promise.resolve 前置都会让平台拒绝授权 */
   function requestMic() {
     if (has() && caps.requestMicrophone !== false) {
-      return Promise.resolve()
-        .then(function () { return window.toy.requestMicrophone(); })
+      var pending;
+      try {
+        pending = window.toy.requestMicrophone();
+      } catch (e) {
+        caps.requestMicrophone = false;
+        return fallbackMic();
+      }
+      return Promise.resolve(pending)
         .then(function (s) {
           caps.requestMicrophone = true;
           stream = s; fromToy = true;

@@ -79,6 +79,19 @@
     if (ctx.state === 'suspended') return ctx.resume().catch(function () {});
     return Promise.resolve();
   }
+
+  /* iOS / 部分 WebView 必须在用户手势内播一段静音才能解锁音频 */
+  function unlock() {
+    init();
+    if (ctx.state === 'suspended') ctx.resume().catch(function () {});
+    try {
+      var b = ctx.createBuffer(1, 1, ctx.sampleRate);
+      var s = ctx.createBufferSource();
+      s.buffer = b;
+      s.connect(ctx.destination);
+      s.start(0);
+    } catch (e) {}
+  }
   function now() { return ctx ? ctx.currentTime : 0; }
 
   /* ---------- 音色 ---------- */
@@ -394,6 +407,7 @@
   }
 
   function micLevel() { return cap ? cap.rms : 0; }
+  function micPeak() { return cap ? cap.peak : 0; }
 
   function micSpectrum() {
     if (!cap || !micData) return null;
@@ -402,12 +416,12 @@
   }
 
   L.ENG = {
-    init: init, resume: resume, now: now,
+    init: init, resume: resume, unlock: unlock, now: now,
     play: play, stop: stop, pump: pump,
     beatPos: beatPos, level: level,
     blip: blip, metronome: metronome,
     beginCapture: beginCapture, endCapture: endCapture,
-    micLevel: micLevel, micSpectrum: micSpectrum,
+    micLevel: micLevel, micPeak: micPeak, micSpectrum: micSpectrum,
     isPlaying: function () { return !!session; }
   };
 })();

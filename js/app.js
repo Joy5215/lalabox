@@ -134,30 +134,38 @@
     state.micBusy = true;
     elMicLabel.textContent = '等一下…';
 
-    ENG.resume()
-      .then(function () { return Bridge.requestMic(); })
-      .then(function (stream) {
-        state.micBusy = false;
-        elMicLabel.textContent = '开始唱';
-        ENG.beginCapture(stream);
-        resetRecUI();
-        setScreen('record');
-        var t = ENG.now();
-        var t0 = t + 0.4;
-        rec = {
-          beat0: t0 + 4 * SPB,
-          end: t0 + 4 * SPB + C.BEATS * SPB,
-          captureStart: t,
-          done: false
-        };
-        ENG.metronome(t0, SPB, 4);
-      })
-      .catch(function (err) {
-        state.micBusy = false;
-        elMicLabel.textContent = '开始唱';
-        var denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
-        toast(denied ? '麦克风没被允许，点「听听示例」也行' : '没拿到麦克风，先听听示例？', 2800);
-      });
+    /* 关键：解锁音频与申请麦克风都必须同步发生在点击手势里，
+       任何 Promise 前置都会让 Toy 平台拒绝授权 */
+    var pending;
+    try {
+      ENG.unlock();
+      pending = Bridge.requestMic();
+    } catch (e) {
+      pending = Promise.reject(e);
+    }
+
+    pending.then(function (stream) {
+      state.micBusy = false;
+      elMicLabel.textContent = '开始唱';
+      ENG.resume();
+      ENG.beginCapture(stream);
+      resetRecUI();
+      setScreen('record');
+      var t = ENG.now();
+      var t0 = t + 0.4;
+      rec = {
+        beat0: t0 + 4 * SPB,
+        end: t0 + 4 * SPB + C.BEATS * SPB,
+        captureStart: t,
+        done: false
+      };
+      ENG.metronome(t0, SPB, 4);
+    }).catch(function (err) {
+      state.micBusy = false;
+      elMicLabel.textContent = '开始唱';
+      var denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+      toast(denied ? '麦克风没被允许，点「听听示例」也行' : '没拿到麦克风，先听听示例？', 2800);
+    });
   }
 
   function stopRecordingNow() {
@@ -167,6 +175,13 @@
     var cap = ENG.endCapture();
     Bridge.releaseMic();
     rec = null;
+
+    /* 一个采样都没收到，或全程几乎静音：明确告诉用户，不要假装在分析 */
+    if (!cap.pcm.length || cap.peak < 0.005) {
+      setScreen('idle');
+      toast('没收到声音：确认麦克风权限已允许，再试一次', 3200);
+      return;
+    }
     goAnalyze(cap, offset);
   }
 
@@ -581,7 +596,11 @@
     var ml = U.clamp(ENG.micLevel() * 5.5, 0, 1);
     elLevelBar.style.width = (ml * 100).toFixed(0) + '%';
     elLevelWrap.classList.toggle('low', ml < 0.14);
-    if (t > rec.beat0 && ml < 0.12) elRecHint.textContent = '有点小声，靠近一点';
+    if (t > rec.beat0 + 0.6 && ENG.micPeak() < 0.004) {
+      elRecHint.textContent = '没听到声音，检查麦克风权限';
+    } else if (t > rec.beat0 && ml < 0.12) {
+      elRecHint.textContent = '有点小声，靠近一点';
+    }
 
     DRAW.record(elCvRec, ENG.micSpectrum(), ml, phase);
     if (t >= rec.end) stopRecordingNow();
