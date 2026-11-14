@@ -181,7 +181,7 @@
     rec = null;
     state.lastCap = null;
 
-    if (cap.pcm.length && cap.peak >= 0.005) {
+    if (!state.forceRec && cap.pcm.length && cap.peak >= 0.005) {
       blobP.catch(function () {});
       goAnalyze(cap, offset);
       return;
@@ -697,7 +697,11 @@
     Bridge.can('requestMicrophone');
 
     var code = null;
-    try { code = new URLSearchParams(location.search).get('s'); } catch (e) {}
+    try {
+      var q = new URLSearchParams(location.search);
+      state.forceRec = q.get('rec') === '1';
+      code = q.get('s');
+    } catch (e) {}
     var shared = code ? CODEC.decode(code) : null;
     if (shared) {
       setTimeout(function () {
