@@ -378,6 +378,68 @@
     "registerProcessor('lala-tap', LalaTap);"
   ].join('\n');
 
+  /* ---------- MediaRecorder 兜底 ---------- */
+  /* Android WebView 上 MediaStreamSource 可能拿到全静音，MediaRecorder 往往正常 */
+  var recorder = null;
+  var recChunks = [];
+
+  function startRecorder(stream) {
+    stopRecorderNow();
+    if (!window.MediaRecorder) return;
+    try {
+      var opts = {};
+      if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        opts.mimeType = 'audio/webm;codecs=opus';
+      }
+      var mr = new MediaRecorder(stream, opts);
+      recChunks = [];
+      mr.ondataavailable = function (e) {
+        if (e.data && e.data.size) recChunks.push(e.data);
+      };
+      mr.start(200);
+      recorder = mr;
+    } catch (e) {
+      recorder = null;
+    }
+  }
+
+  function stopRecorderNow() {
+    if (!recorder) return;
+    try { if (recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
+    recorder = null;
+    recChunks = [];
+  }
+
+  function takeRecorderBlob() {
+    if (!recorder) return Promise.resolve(null);
+    var mr = recorder;
+    recorder = null;
+    return new Promise(function (resolve) {
+      var done = function () {
+        try {
+          var blob = new Blob(recChunks, { type: mr.mimeType || 'audio/webm' });
+          recChunks = [];
+          resolve(blob.size > 0 ? blob : null);
+        } catch (e) { resolve(null); }
+      };
+      try {
+        if (mr.state === 'inactive') done();
+        else { mr.onstop = done; mr.stop(); }
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  function decodeBlob(blob) {
+    if (!blob) return Promise.reject(new Error('no-blob'));
+    return blob.arrayBuffer().then(function (ab) {
+      return new Promise(function (resolve, reject) {
+        try {
+          ctx.decodeAudioData(ab, resolve, reject);
+        } catch (e) { reject(e); }
+      });
+    });
+  }
+
   function beginCapture(stream) {
     init();
     var src = ctx.createMediaStreamSource(stream);
@@ -397,6 +459,8 @@
       src: src, mute: mute, an: an, node: null, proc: null,
       mode: 'none', frames: 0, samples: 0
     };
+
+    startRecorder(stream);
 
     function push(inp) {
       if (!cap || !inp) return;
@@ -495,6 +559,8 @@
     beatPos: beatPos, level: level,
     blip: blip, metronome: metronome,
     beginCapture: beginCapture, endCapture: endCapture,
+    takeRecorderBlob: takeRecorderBlob, decodeBlob: decodeBlob,
+    stopRecorderNow: stopRecorderNow,
     micLevel: micLevel, micPeak: micPeak, micSpectrum: micSpectrum,
     micStats: micStats,
     isPlaying: function () { return !!session; }

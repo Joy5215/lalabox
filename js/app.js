@@ -176,19 +176,45 @@
     rec.done = true;
     var offset = Math.max(0, rec.beat0 - rec.captureStart);
     var cap = ENG.endCapture();
+    var blobP = ENG.takeRecorderBlob();
     Bridge.releaseMic();
     rec = null;
     state.lastCap = null;
 
-    /* 一个采样都没收到，或全程几乎静音：明确告诉用户，不要假装在分析 */
-    if (!cap.pcm.length || cap.peak < 0.005) {
+    if (cap.pcm.length && cap.peak >= 0.005) {
+      blobP.catch(function () {});
+      goAnalyze(cap, offset);
+      return;
+    }
+
+    /* WebAudio 一路全静音（Android WebView 常见），改吃 MediaRecorder 的录音 */
+    blobP.then(function (blob) {
+      if (!blob) throw new Error('no-blob');
+      return ENG.decodeBlob(blob).then(function (buf) {
+        var pcm = buf.getChannelData(0);
+        var peak = 0;
+        for (var i = 0; i < pcm.length; i++) {
+          var v = Math.abs(pcm[i]);
+          if (v > peak) peak = v;
+        }
+        if (peak < 0.005) {
+          state.lastCap = { mode: 'mediarecorder', frames: cap.frames, pcm: pcm, peak: peak };
+          setScreen('idle');
+          toast('两条链路都没收到声音，看「麦克风自检」', 3400);
+          openDiag(null);
+          return;
+        }
+        goAnalyze({
+          pcm: pcm, sampleRate: buf.sampleRate,
+          peak: peak, mode: 'mediarecorder', frames: 0
+        }, offset);
+      });
+    }).catch(function () {
       state.lastCap = cap;
       setScreen('idle');
       toast('没收到声音，看「麦克风自检」查原因', 3200);
       openDiag(null);
-      return;
-    }
-    goAnalyze(cap, offset);
+    });
   }
 
   function goAnalyze(cap, offset) {
