@@ -37,6 +37,21 @@ const server = http.createServer(function (req, res) {
   let urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
   if (urlPath === '/') urlPath = '/index.html';
 
+  /* 固定入口：跳到最近一次 toy update 的预览地址，书签用这条即可 */
+  if (urlPath === '/latest') {
+    fs.readFile(path.join(ROOT, '.latest-preview'), 'utf8', function (err, txt) {
+      if (err || !txt.trim()) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<meta charset="utf-8"><body style="font:14px system-ui;padding:24px">'
+          + '还没有预览链接，先让我推一版到 Toy。</body>');
+        return;
+      }
+      res.writeHead(302, { Location: txt.trim(), 'Cache-Control': 'no-store' });
+      res.end();
+    });
+    return;
+  }
+
   const file = path.join(ROOT, urlPath);
   if (!file.startsWith(ROOT)) {
     res.writeHead(403).end('forbidden');
