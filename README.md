@@ -16,7 +16,21 @@ npx serve .        # 或
 python -m http.server 8080
 ```
 
-**上传到 Toy**：把整个目录作为 Toy 资源上传，入口为仓库根目录的 `index.html`。
+**上传到 Toy**：用官方 CLI 推送 `dist/`，入口为 `dist/index.html`。
+
+## 发布到 Toy（CLI）
+
+```bash
+node tools/make-assets.js     # 生成 assets/icon.png 与 assets/poster.png（首次或改视觉时）
+node tools/pack.js            # 产出 dist/
+toy update 55182818016256 dist --json          # 只出预览，不进审核
+toy update 55182818016256 dist --json --yes    # 确认后提交审核
+```
+
+- 测试用 Toy：`lalabox-test`（id `55182818016256`）。
+- `create` 必须带 `--poster`，否则服务端报 `307009 缺少必要文件`；`--icon` 建议一起给。
+- `update` 必须显式传 id，否则 JSON 模式下会报「不支持交互选择」。
+- slug 发布后不可修改，不要走「删除-重建」。
 
 ## 目录结构
 
