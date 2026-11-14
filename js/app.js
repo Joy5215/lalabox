@@ -57,11 +57,6 @@
     return C.PCN_CN[song.tonic] + (song.mode === 'major' ? ' 大调' : ' 小调');
   }
 
-  function updateGlow() {
-    var lv = ENG.isPlaying() ? ENG.level() : 0;
-    document.documentElement.style.setProperty('--glow', (0.28 + lv * 0.9).toFixed(2));
-  }
-
   /* ---------- 结果态 ---------- */
   function buildChips() {
     elChips.innerHTML = '';
@@ -397,36 +392,36 @@
     c.setTransform(2, 0, 0, 2, 0, 0);
 
     var g = c.createLinearGradient(0, 0, W, H);
-    g.addColorStop(0, '#12101F');
-    g.addColorStop(.55, '#1C1930');
-    g.addColorStop(1, '#0B0714');
+    g.addColorStop(0, '#FFFCF6');
+    g.addColorStop(.55, '#F7F1E5');
+    g.addColorStop(1, '#F1EADD');
     c.fillStyle = g;
     c.fillRect(0, 0, W, H);
 
-    var rg = c.createRadialGradient(W * .2, H * .1, 20, W * .2, H * .1, W * .9);
-    rg.addColorStop(0, 'rgba(124,77,255,.55)');
-    rg.addColorStop(1, 'rgba(124,77,255,0)');
+    var rg = c.createRadialGradient(W * .16, H * .08, 20, W * .16, H * .08, W * .9);
+    rg.addColorStop(0, 'rgba(237,223,196,.85)');
+    rg.addColorStop(1, 'rgba(237,223,196,0)');
     c.fillStyle = rg;
     c.fillRect(0, 0, W, H);
 
-    var rg2 = c.createRadialGradient(W * .9, H * .8, 10, W * .9, H * .8, W * .8);
-    rg2.addColorStop(0, 'rgba(255,61,154,.35)');
-    rg2.addColorStop(1, 'rgba(255,61,154,0)');
+    var rg2 = c.createRadialGradient(W * .92, H * .86, 10, W * .92, H * .86, W * .8);
+    rg2.addColorStop(0, 'rgba(220,231,216,.75)');
+    rg2.addColorStop(1, 'rgba(220,231,216,0)');
     c.fillStyle = rg2;
     c.fillRect(0, 0, W, H);
 
-    c.fillStyle = 'rgba(255,255,255,.5)';
+    c.fillStyle = 'rgba(62,58,51,.55)';
     c.font = '600 13px "PingFang SC",system-ui,sans-serif';
     c.fillText('LALABOX', 40, 56);
-    c.fillStyle = 'rgba(255,255,255,.24)';
+    c.fillStyle = 'rgba(62,58,51,.32)';
     c.font = '11px "PingFang SC",system-ui,sans-serif';
-    c.fillText('哼两句，就成歌', 110, 56);
+    c.fillText('哼两句，就成歌', 112, 56);
 
-    c.fillStyle = '#fff';
-    c.font = '700 38px "PingFang SC",system-ui,sans-serif';
+    c.fillStyle = '#3E3A33';
+    c.font = '600 38px "Songti SC","Noto Serif SC",serif';
     c.fillText(autoName(state.song), 40, 148);
 
-    c.fillStyle = 'rgba(180,174,203,.9)';
+    c.fillStyle = 'rgba(62,58,51,.58)';
     c.font = '13px "PingFang SC",system-ui,sans-serif';
     c.fillText(keyName(state.song) + ' · ' + state.song.bpm + ' BPM · '
       + C.STYLE_LABEL[state.song.style], 40, 182);
@@ -441,7 +436,7 @@
       return 460 - ((m - minM) / Math.max(2, maxM - minM)) * 170;
     };
 
-    c.strokeStyle = 'rgba(255,255,255,.06)';
+    c.strokeStyle = 'rgba(62,58,51,.07)';
     c.lineWidth = 1;
     for (var i = 0; i <= 16; i++) {
       c.beginPath();
@@ -451,25 +446,30 @@
     }
 
     var lg = c.createLinearGradient(40, 0, W - 40, 0);
-    lg.addColorStop(0, '#8B5CFF');
-    lg.addColorStop(.6, '#7C4DFF');
-    lg.addColorStop(1, '#00E5FF');
+    lg.addColorStop(0, '#6F8F6C');
+    lg.addColorStop(.55, '#8FAE8B');
+    lg.addColorStop(1, '#D99C8A');
     c.strokeStyle = lg;
-    c.lineWidth = 3.4;
+    c.lineWidth = 3;
     c.lineJoin = 'round';
-    c.shadowColor = 'rgba(124,77,255,.8)';
-    c.shadowBlur = 18;
+    c.lineCap = 'round';
     c.beginPath();
     state.song.notes.forEach(function (n, k) {
       if (k === 0) c.moveTo(X(n.b), Y(n.m)); else c.lineTo(X(n.b), Y(n.m));
       c.lineTo(X(n.b + n.d), Y(n.m));
     });
     c.stroke();
-    c.shadowBlur = 0;
 
-    c.fillStyle = 'rgba(255,255,255,.34)';
+    c.strokeStyle = 'rgba(62,58,51,.16)';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(40, 648);
+    c.lineTo(W - 40, 648);
+    c.stroke();
+
+    c.fillStyle = 'rgba(62,58,51,.45)';
     c.font = '12px "PingFang SC",system-ui,sans-serif';
-    c.fillText('扫码听我这首歌', 40, 676);
+    c.fillText('扫码听我这首歌', 40, 680);
 
     state.posterUrl = cv.toDataURL('image/png');
 
@@ -478,9 +478,12 @@
       if (!b64) return;
       var img = new Image();
       img.onload = function () {
-        c.fillStyle = '#fff';
+        c.fillStyle = '#FFFFFF';
         DRAW.rr(c, W - 40 - 118, H - 40 - 118, 118, 118, 14);
         c.fill();
+        c.strokeStyle = 'rgba(62,58,51,.12)';
+        c.lineWidth = 1;
+        c.stroke();
         c.drawImage(img, W - 40 - 110, H - 40 - 110, 102, 102);
         state.posterUrl = cv.toDataURL('image/png');
       };
@@ -604,7 +607,6 @@
         DRAW.band(elCvBand, state.song, pos);
       }
     }
-    updateGlow();
   }
 
   /* ---------- 初始化 ---------- */

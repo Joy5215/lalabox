@@ -1,49 +1,76 @@
 /* ============================================================
- * base.css — 设计变量 / 重置 / 全局背景
+ * base.css — 设计变量 / 重置 / 静态纸感背景
+ * 风格：治愈系 · 暖白纸面 · 低饱和自然色 · 无光晕无动效
  * ============================================================ */
 :root{
-  --bg:#07060D; --bg2:#12101F; --bg3:#1C1930;
-  --pri:#7C4DFF; --cy:#00E5FF; --pk:#FF3D9A;
-  --ok:#35F0A0; --warn:#FFC53D; --err:#FF5A5F;
-  --t1:#FFFFFF; --t2:#B4AECB; --t3:#6E6790;
-  --line:rgba(255,255,255,.08);
-  --glass:rgba(255,255,255,.05);
+  /* 纸张 */
+  --paper:#F7F4ED;
+  --paper-2:#FFFDF9;
+  --card:#FFFFFF;
+
+  /* 墨色 */
+  --ink:#3E3A33;
+  --ink-2:#7A7367;
+  --ink-3:#A9A296;
+
+  /* 描边与阴影 */
+  --line:#EDE6DA;
+  --line-2:#E2D9C9;
+  --shadow-s:0 2px 10px rgba(120,110,90,.05);
+  --shadow-m:0 10px 30px rgba(120,110,90,.08);
+
+  /* 自然色 */
+  --sage:#8FAE8B;
+  --sage-d:#6F8F6C;
+  --sage-l:#EDF3EA;
+  --sky:#A3C1D4;
+  --sky-l:#EDF3F7;
+  --clay:#D99C8A;
+  --clay-l:#FAEFEA;
+  --sand:#E4D2B4;
+  --sand-l:#FBF4E8;
+
+  --ok:#7FA97C;
+  --warn:#C79A5A;
+  --err:#C97B6E;
+
+  /* 字体 */
+  --serif:"Songti SC","Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+  --sans:"PingFang SC","HarmonyOS Sans SC","Noto Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+
+  /* 安全区 */
   --sat:env(safe-area-inset-top,0px);
   --sab:env(safe-area-inset-bottom,0px);
-  --glow:.35;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;padding:0}
 body{
-  background:var(--bg);color:var(--t1);overflow:hidden;overscroll-behavior:none;
-  font-family:"PingFang SC","HarmonyOS Sans SC","Noto Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
-  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+  background:var(--paper);
+  color:var(--ink);
+  overflow:hidden;overscroll-behavior:none;
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
 }
 button{font-family:inherit;border:none;background:none;color:inherit;cursor:pointer}
 h1,h2,h3,p,ol,li{margin:0;padding:0;list-style:none}
 
-/* 背景光晕 */
+/* 静态背景：三团柔和的自然色 + 细纸纹 */
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:
-  radial-gradient(1100px 760px at 18% -6%, #1d1245 0%, rgba(29,18,69,0) 62%),
-  radial-gradient(820px 680px at 92% 12%, #062c3a 0%, rgba(6,44,58,0) 58%),
-  radial-gradient(900px 780px at 50% 112%, #2a0a24 0%, rgba(42,10,36,0) 62%),
-  var(--bg);}
-.bg::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.45;
-  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,rgba(0,0,0,0) 1px 3px);}
-.orb{position:absolute;border-radius:50%;filter:blur(70px);will-change:transform,opacity;
-  opacity:calc(.30 + var(--glow)*.4)}
-.o1{width:46vmax;height:46vmax;left:-16vmax;top:-14vmax;background:#7C4DFF;animation:drift1 18s ease-in-out infinite}
-.o2{width:38vmax;height:38vmax;right:-14vmax;top:6vmax;background:#00E5FF;animation:drift2 22s ease-in-out infinite;
-  opacity:calc(.18 + var(--glow)*.3)}
-.o3{width:44vmax;height:44vmax;left:12vmax;bottom:-22vmax;background:#FF3D9A;animation:drift3 20s ease-in-out infinite;
-  opacity:calc(.16 + var(--glow)*.28)}
-@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vmax,4vmax,0) scale(1.12)}}
-@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-5vmax,6vmax,0) scale(1.16)}}
-@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(4vmax,-5vmax,0) scale(1.1)}}
-@keyframes spin{to{transform:rotate(360deg)}}
+  radial-gradient(900px 620px at 12% -8%, #F4EAD9 0%, rgba(244,234,217,0) 60%),
+  radial-gradient(760px 560px at 96% 6%, #E9F0E7 0%, rgba(233,240,231,0) 58%),
+  radial-gradient(720px 700px at 50% 114%, #F2E5DD 0%, rgba(242,229,221,0) 62%),
+  var(--paper);}
+.bg::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.6;
+  background-image:radial-gradient(rgba(122,115,103,.07) 1px, rgba(0,0,0,0) 1px);
+  background-size:4px 4px;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.42}
+.o1{width:44vmax;height:44vmax;left:-14vmax;top:-12vmax;background:#EDDFC4}
+.o2{width:34vmax;height:34vmax;right:-12vmax;top:8vmax;background:#DCE7D8;opacity:.36}
+.o3{width:38vmax;height:38vmax;left:14vmax;bottom:-20vmax;background:#F0DDD4;opacity:.34}
 
-body.lite .orb{filter:blur(40px)}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.001ms !important;animation-iteration-count:1 !important;
