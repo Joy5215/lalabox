@@ -6,7 +6,7 @@
   'use strict';
   var L = window.LALA;
   var U = L.util, C = L.C;
-  var Bridge = L.Bridge, ENG = L.ENG, DRAW = L.DRAW;
+  var Bridge = L.Bridge, ENG = L.ENG, DRAW = L.DRAW, DIAG = L.DIAG;
   var ANALYZE = L.ANALYZE, CODEC = L.CODEC, COMPOSE = L.COMPOSE;
 
   var $ = U.$;
@@ -145,26 +145,29 @@
     }
 
     pending.then(function (stream) {
-      state.micBusy = false;
       elMicLabel.textContent = '开始唱';
-      ENG.resume();
-      ENG.beginCapture(stream);
-      resetRecUI();
-      setScreen('record');
-      var t = ENG.now();
-      var t0 = t + 0.4;
-      rec = {
-        beat0: t0 + 4 * SPB,
-        end: t0 + 4 * SPB + C.BEATS * SPB,
-        captureStart: t,
-        done: false
-      };
-      ENG.metronome(t0, SPB, 4);
+      return ENG.resume().then(function () {
+        return ENG.beginCapture(stream);
+      }).then(function () {
+        state.micBusy = false;
+        resetRecUI();
+        setScreen('record');
+        var t = ENG.now();
+        var t0 = t + 0.4;
+        rec = {
+          beat0: t0 + 4 * SPB,
+          end: t0 + 4 * SPB + C.BEATS * SPB,
+          captureStart: t,
+          done: false
+        };
+        ENG.metronome(t0, SPB, 4);
+      });
     }).catch(function (err) {
       state.micBusy = false;
       elMicLabel.textContent = '开始唱';
       var denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
-      toast(denied ? '麦克风没被允许，点「听听示例」也行' : '没拿到麦克风，先听听示例？', 2800);
+      toast(denied ? '麦克风没被允许，看「麦克风自检」' : '没拿到麦克风，看「麦克风自检」', 3000);
+      openDiag(err);
     });
   }
 
@@ -175,11 +178,14 @@
     var cap = ENG.endCapture();
     Bridge.releaseMic();
     rec = null;
+    state.lastCap = null;
 
     /* 一个采样都没收到，或全程几乎静音：明确告诉用户，不要假装在分析 */
     if (!cap.pcm.length || cap.peak < 0.005) {
+      state.lastCap = cap;
       setScreen('idle');
-      toast('没收到声音：确认麦克风权限已允许，再试一次', 3200);
+      toast('没收到声音，看「麦克风自检」查原因', 3200);
+      openDiag(null);
       return;
     }
     goAnalyze(cap, offset);
@@ -338,6 +344,30 @@
     var x = s.querySelector('[data-close]');
     if (x) x.addEventListener('click', closeSheets);
   });
+
+  /* ---------- 自检 ---------- */
+  function openDiag(err) {
+    openSheet('#sheetDiag');
+    var text = '';
+    if (err) {
+      text += '错误      ' + (err.name || '-') + ' ' + (err.message || err) + '\n\n';
+    }
+    if (state.lastCap) {
+      var c = state.lastCap;
+      text += '上次采集  方式=' + c.mode
+        + ' 回调=' + c.frames
+        + ' 采样=' + c.pcm.length
+        + ' 峰值=' + c.peak.toFixed(4) + '\n\n';
+    }
+    text += DIAG.envText();
+    $('#diagText').textContent = text;
+  }
+
+  function runDiag() {
+    var el = $('#diagText');
+    el.textContent = '检测中…（约 2 秒，请允许麦克风）';
+    DIAG.run().then(function (text) { el.textContent = text; });
+  }
 
   /* ---------- 保存 ---------- */
   var ADJ = ['月亮', '橘子汽水', '夏夜', '海风', '雨天', '霓虹', '凌晨三点', '纸飞机',
@@ -550,6 +580,11 @@
   });
   $('#btnPoster').addEventListener('click', openPoster);
   $('#btnPosterSave').addEventListener('click', savePoster);
+  $('#btnDiag').addEventListener('click', function () {
+    openSheet('#sheetDiag');
+    runDiag();
+  });
+  $('#btnDiagRun').addEventListener('click', runDiag);
   $('#btnWorks').addEventListener('click', function () {
     renderWorks();
     openSheet('#sheetWorks');

@@ -362,52 +362,126 @@
   }
 
   /* ---------- 录音采集 ---------- */
+  /* AudioWorklet 优先：iOS/部分 WebView 上 ScriptProcessor 经常不回调 */
+  var WORKLET_CODE = [
+    'class LalaTap extends AudioWorkletProcessor {',
+    '  constructor(){ super(); this.b = new Float32Array(2048); this.n = 0; }',
+    '  process(inputs){',
+    '    var c = inputs[0] && inputs[0][0];',
+    '    if (c) { for (var i = 0; i < c.length; i++) {',
+    '      this.b[this.n++] = c[i];',
+    '      if (this.n === 2048) { this.port.postMessage(this.b.slice(0)); this.n = 0; }',
+    '    } }',
+    '    return true;',
+    '  }',
+    '}',
+    "registerProcessor('lala-tap', LalaTap);"
+  ].join('\n');
+
   function beginCapture(stream) {
     init();
     var src = ctx.createMediaStreamSource(stream);
-    var proc = ctx.createScriptProcessor(2048, 1, 1);
-    var mute = ctx.createGain(); mute.gain.value = 0;
-    var an = ctx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = 0.7;
+    var mute = ctx.createGain();
+    mute.gain.value = 0;
+    mute.connect(ctx.destination);
+
+    var an = ctx.createAnalyser();
+    an.fftSize = 512;
+    an.smoothingTimeConstant = 0.7;
+    src.connect(an);
+    an.connect(mute);
+    micData = new Uint8Array(an.frequencyBinCount);
 
     cap = {
       chunks: [], peak: 0, rms: 0, rate: ctx.sampleRate,
-      src: src, proc: proc, mute: mute, an: an
+      src: src, mute: mute, an: an, node: null, proc: null,
+      mode: 'none', frames: 0, samples: 0
     };
-    micData = new Uint8Array(an.frequencyBinCount);
 
-    proc.onaudioprocess = function (e) {
-      var inp = e.inputBuffer.getChannelData(0);
+    function push(inp) {
+      if (!cap || !inp) return;
       var sum = 0;
       for (var i = 0; i < inp.length; i++) {
-        var s = inp[i];
-        sum += s * s;
-        cap.chunks.push(s);
+        var v = inp[i];
+        sum += v * v;
+        cap.chunks.push(v);
       }
+      cap.frames++;
+      cap.samples += inp.length;
       var r = Math.sqrt(sum / inp.length);
       cap.rms = cap.rms * 0.68 + r * 0.32;
       if (r > cap.peak) cap.peak = r;
-    };
+    }
 
-    src.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
-    src.connect(an); an.connect(mute);
-    return cap;
+    function viaWorklet() {
+      return new Promise(function (resolve, reject) {
+        if (!ctx.audioWorklet || typeof window.AudioWorkletNode === 'undefined') {
+          reject(new Error('no-worklet'));
+          return;
+        }
+        var url;
+        try {
+          url = URL.createObjectURL(new Blob([WORKLET_CODE], { type: 'application/javascript' }));
+        } catch (e) {
+          reject(e);
+          return;
+        }
+        ctx.audioWorklet.addModule(url).then(function () {
+          var node = new AudioWorkletNode(ctx, 'lala-tap');
+          node.port.onmessage = function (ev) { push(ev.data); };
+          src.connect(node);
+          node.connect(mute);
+          if (cap) { cap.node = node; cap.mode = 'worklet'; }
+          resolve(true);
+        }).catch(reject);
+      });
+    }
+
+    function viaProcessor() {
+      return new Promise(function (resolve) {
+        var proc = ctx.createScriptProcessor(2048, 1, 1);
+        proc.onaudioprocess = function (e) { push(e.inputBuffer.getChannelData(0)); };
+        src.connect(proc);
+        proc.connect(mute);
+        if (cap) { cap.proc = proc; cap.mode = 'scriptprocessor'; }
+        resolve(true);
+      });
+    }
+
+    return viaWorklet().catch(function () { return viaProcessor(); });
   }
 
   function endCapture() {
-    if (!cap) return { pcm: new Float32Array(0), sampleRate: 48000, peak: 0 };
-    try { cap.proc.disconnect(); } catch (e) {}
-    try { cap.src.disconnect(); } catch (e) {}
-    try { cap.mute.disconnect(); } catch (e) {}
+    if (!cap) {
+      return { pcm: new Float32Array(0), sampleRate: 48000, peak: 0, mode: 'none', frames: 0 };
+    }
     var c = cap;
     cap = null;
+    try { if (c.proc) { c.proc.onaudioprocess = null; c.proc.disconnect(); } } catch (e) {}
+    try { if (c.node) { c.node.port.onmessage = null; c.node.disconnect(); } } catch (e) {}
+    try { c.src.disconnect(); } catch (e) {}
+    try { c.mute.disconnect(); } catch (e) {}
+
     var pcm = new Float32Array(c.chunks.length);
     for (var i = 0; i < c.chunks.length; i++) pcm[i] = c.chunks[i];
     c.chunks = [];
-    return { pcm: pcm, sampleRate: c.rate, peak: c.peak };
+    return { pcm: pcm, sampleRate: c.rate, peak: c.peak, mode: c.mode, frames: c.frames };
   }
 
   function micLevel() { return cap ? cap.rms : 0; }
   function micPeak() { return cap ? cap.peak : 0; }
+
+  function micStats() {
+    return {
+      mode: cap ? cap.mode : 'none',
+      frames: cap ? cap.frames : 0,
+      samples: cap ? cap.samples : 0,
+      rate: cap ? cap.rate : 0,
+      peak: cap ? cap.peak : 0,
+      rms: cap ? cap.rms : 0,
+      ctxState: ctx ? ctx.state : 'no-ctx'
+    };
+  }
 
   function micSpectrum() {
     if (!cap || !micData) return null;
@@ -422,6 +496,7 @@
     blip: blip, metronome: metronome,
     beginCapture: beginCapture, endCapture: endCapture,
     micLevel: micLevel, micPeak: micPeak, micSpectrum: micSpectrum,
+    micStats: micStats,
     isPlaying: function () { return !!session; }
   };
 })();
