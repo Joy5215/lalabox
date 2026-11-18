@@ -66,9 +66,34 @@
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       return Promise.reject(new Error('no-media'));
     }
-    return navigator.mediaDevices.getUserMedia({
+    /* 某些浏览器（如华为浏览器）权限被永久拒绝时 getUserMedia 既不 resolve 也不 reject，
+       Promise 会永远挂着，界面就卡在「等一下…」。这里兜一层超时，让失败可见。 */
+    var pending = navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-    }).then(function (s) { stream = s; fromToy = false; return s; });
+    });
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      var timer = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        reject(new Error('mic-timeout'));
+      }, 8000);
+      pending.then(function (s) {
+        if (settled) {
+          try { s.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        stream = s; fromToy = false;
+        resolve(s);
+      }, function (e) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(e);
+      });
+    });
   }
   function releaseMic() {
     var s = stream;

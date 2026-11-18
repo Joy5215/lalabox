@@ -21,6 +21,14 @@
 .round:active{background:var(--sage-d);box-shadow:none}
 .round svg{width:18px;height:18px}
 
+/* 加乐器的总入口：面板标题右侧一个小圆 */
+.round-sm{margin-left:auto;align-self:center;width:30px;height:30px;border-radius:50%;
+  display:grid;place-items:center;flex:0 0 auto;font-size:15px;line-height:1;
+  background:var(--sage);color:#fff;box-shadow:0 4px 12px rgba(143,174,139,.28);
+  transition:background .18s,transform .18s}
+.round-sm:active{background:var(--sage-d);transform:scale(.94)}
+.round-sm.on{background:var(--sage-d)}
+
 .link{font-size:12px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;
   text-decoration-color:var(--line-2);padding:8px}
 .link:hover{color:var(--sage-d);text-decoration-color:var(--sage)}
@@ -48,6 +56,11 @@
   background:var(--card);transition:background .18s,color .18s}
 .steps li.on{color:#fff;border-color:transparent;background:var(--sage)}
 .steps li+li::before{content:'·';margin-right:-2px;color:var(--ink-3);position:relative;left:-7px}
+
+/* 不用麦克风的两个入口：次级链接，别抢主按钮 */
+.idle-alt{display:flex;align-items:center;gap:2px;margin-top:12px}
+.idle-alt .link{font-size:12px}
+.idle-sep{font-size:11px;color:var(--ink-3)}
 
 /* ---------- 录音态 ---------- */
 .rec-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -80,17 +93,96 @@
   box-shadow:var(--shadow-s);display:flex;flex-direction:column;overflow:hidden}
 .panel-title{font-size:11.5px;letter-spacing:.06em;color:var(--ink-3);
   display:flex;align-items:baseline;gap:7px;flex:0 0 auto}
-.panel-title b{font-size:13px;color:var(--ink);font-weight:600;letter-spacing:.02em}
-.panel-title span{font-size:10px;color:var(--ink-3)}
+.panel-title b{font-size:13px;color:var(--ink);font-weight:600;letter-spacing:.02em;flex:0 0 auto}
+.panel-title span{font-size:10px;color:var(--ink-3);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .panel canvas{flex:1 1 auto;width:100%;min-height:0;display:block;margin-top:3px}
 
-.styles{display:flex;gap:7px;overflow-x:auto;padding:1px;flex:0 0 auto;scrollbar-width:none}
-.styles::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;padding:8px 16px;border-radius:999px;font-size:12.5px;color:var(--ink-2);
   border:1px solid var(--line-2);background:var(--card);transition:background .18s,color .18s;
   white-space:nowrap}
 .chip:hover{background:var(--sand-l)}
 .chip.on{color:#fff;border-color:transparent;background:var(--sage)}
+
+/* 第一栏：已经加上的乐器，一行一件；点名字展开这件自己的曲调 */
+/* 面板顶部：乐器 / 氛围 两类分开管，入口仍是同一个 ＋ */
+.band-tabs{display:flex;gap:4px;padding:3px;border-radius:999px;background:#E6DFD1;margin:0 0 14px}
+.band-tabs button{flex:1 1 0;padding:7px 10px;border-radius:999px;font-size:12px;
+  color:var(--ink-3);transition:background .16s,color .16s}
+.band-tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(120,110,90,.14)}
+
+.band-list{display:flex;flex-direction:column;gap:6px;margin:0 0 16px}
+.band-empty{font-size:11.5px;line-height:1.7;color:var(--ink-3);padding:4px 2px}
+.band-row{display:flex;flex-direction:column;gap:4px}
+.band-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:13px;
+  background:var(--card);border:1px solid var(--line-2);transition:border-color .18s}
+.band-item.open{border-color:var(--sage)}
+.band-item-name{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px;
+  cursor:pointer;padding:1px 0}
+.band-item-name b{font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.band-item-name span{font-size:10px;color:var(--ink-3);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.band-vol{flex:0 0 64px;width:64px;height:20px;background:transparent;
+  accent-color:var(--sage);touch-action:pan-y}
+.band-x{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-size:12px;line-height:1;color:var(--ink-3);background:#F0EBE1}
+.band-x:active{background:#E7E1D4;color:var(--ink-2)}
+.band-tune{flex:0 0 auto;padding:5px 9px;border-radius:999px;font-size:10.5px;line-height:1.2;
+  color:var(--ink-3);border:1px solid var(--line-2);background:var(--card);white-space:nowrap}
+.band-tune:active{background:#F0EBE1}
+.band-tune.on{color:#fff;background:var(--sage);border-color:transparent}
+.band-moods{display:flex;flex-wrap:wrap;gap:6px;padding:2px 4px 8px}
+.band-moods .chip{padding:6px 12px;font-size:11.5px}
+
+/* 第二栏：先选类别，点开再选具体音色；点音色就试听并加进来 */
+.band-add{display:flex;flex-direction:column;gap:9px;margin:0 0 16px}
+.band-cats{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+.band-cats::-webkit-scrollbar{display:none}
+.band-cat{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:8px 14px;
+  border-radius:999px;font-size:12px;color:var(--ink-2);
+  border:1px solid var(--line-2);background:var(--card);white-space:nowrap}
+.band-cat i{font-style:normal;font-size:10px;color:var(--ink-3)}
+.band-cat.on{color:#fff;background:var(--sage);border-color:transparent}
+.band-cat.on i{color:rgba(255,255,255,.72)}
+.band-add-chips{display:flex;flex-wrap:wrap;gap:7px}
+
+/* 示范区：常用和弦走向 / 氛围底色，两列卡片 */
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.demo-card{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;
+  padding:9px 10px;border-radius:12px;text-align:left;background:var(--card);
+  border:1px solid var(--line-2);
+  transition:background .16s,border-color .16s,transform .12s}
+.demo-card:active{transform:scale(.985)}
+.demo-card.on{background:var(--sage-l);border-color:#CFDBC9}
+.demo-name{font-size:12px;font-weight:600;color:var(--ink);letter-spacing:.01em;
+  font-variant-numeric:tabular-nums}
+.demo-card.on .demo-name{color:var(--sage-d)}
+.demo-hint{max-width:100%;font-size:10px;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums}
+.demo-card.on .demo-hint{color:#7E9A7B}
+
+/* 试听台：上行写听哪件 + 整队/单件开关，下行是「换一版」与「加入乐队」 */
+.band-pick{display:flex;flex-direction:column;gap:10px;padding:11px 12px;width:100%;
+  border-radius:15px;background:var(--sage-l);border:1px solid #DCE7D8}
+.band-pick-head{display:flex;align-items:center;gap:8px}
+.band-pick-head span{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.band-pick b{font-weight:600;color:var(--ink)}
+.band-pick-acts{display:flex;gap:8px}
+.band-pick-acts .btn{flex:1 1 0;max-width:none;padding:9px 12px;font-size:12px;border-radius:11px}
+
+/* 试听范围：整队 / 单件，两格分段控件 */
+.seg{flex:0 0 auto;display:inline-flex;gap:2px;padding:2px;border-radius:999px;
+  background:#E6DFD1}
+.seg button{padding:4px 10px;border-radius:999px;font-size:10.5px;line-height:1.5;
+  color:var(--ink-3);transition:background .16s,color .16s}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(120,110,90,.14)}
+
+.band-label{font-size:11px;letter-spacing:.06em;color:var(--ink-3);margin:0 0 8px}
+.band-acts{display:flex;gap:8px;margin-top:14px}
+.band-acts .btn{flex:1 1 0;max-width:none}
 
 /* 分析中 */
 .scan{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;
@@ -118,6 +210,59 @@
   color:var(--ink)}
 .x{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
   color:var(--ink-3);background:#F0EBE1;font-size:14px;line-height:1}
+.sheet-hint{font-size:11.5px;color:var(--ink-3);line-height:1.7;margin:0 0 12px}
+.sheet-hint.hide{display:none}
+
+/* 候选卡：一段一张，点一下先试听；主行左侧是风格/节奏档，右上角是速度 */
+.rand-list{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.rand-item{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  padding:13px 14px;border-radius:16px;text-align:left;
+  background:var(--card);border:1px solid var(--line);transition:border-color .18s,background .18s}
+.rand-item:hover{background:var(--sand-l)}
+.rand-item:active{border-color:var(--sage);background:var(--sage-l)}
+.rand-item.on{border-color:var(--sage);background:var(--sage-l)}
+.rand-item b{font-size:14px;font-weight:600;color:var(--ink);letter-spacing:.04em;
+  padding-right:66px}
+.rand-item span{font-size:10.5px;color:var(--ink-3);letter-spacing:.03em}
+.rand-bpm{position:absolute;right:12px;top:12px;font-style:normal;
+  font-size:10px;letter-spacing:.02em;color:var(--sage-d);
+  background:var(--sage-l);border-radius:999px;padding:2px 8px}
+.rand-item.on .rand-bpm{background:#DDEBD8}
+
+/* 一排可选 chips（节奏档 / 氛围 / 风格），横向滚动不换行，面板不被撑高 */
+.chip-row{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;
+  padding:1px 1px 3px;margin:0 0 12px}
+.chip-row::-webkit-scrollbar{display:none}
+.chip-row .chip{padding:7px 14px;font-size:12px}
+
+/* 速度 / 音高：像播放器那样按一下进一档，到头就灰掉，中间显示当前偏移 */
+.pref-step{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:0 1px}
+.pref-step .ps-btn{flex:0 0 auto;min-width:54px;padding:7px 12px;border-radius:999px;
+  font-size:12px;color:var(--ink-2);border:1px solid var(--line-2);background:var(--card);
+  transition:background .16s,border-color .16s,color .16s;white-space:nowrap}
+.pref-step .ps-btn:hover{background:var(--sand-l)}
+.pref-step .ps-btn:active{border-color:var(--sage);background:var(--sage-l);color:var(--sage-d)}
+.pref-step .ps-btn:disabled{opacity:.38;box-shadow:none}
+.pref-step .ps-val{flex:1;min-width:0;text-align:center;font-style:normal;
+  font-size:11.5px;color:var(--sage-d);letter-spacing:.02em}
+
+/* 简谱面板下半截：随机变奏与「按原谱生成」分开，避免误点 */
+.var-block{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+
+.btn:disabled{opacity:.45;box-shadow:none}
+
+/* 主音色选择 */
+.voices{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.voice{display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:12px 13px;border-radius:16px;text-align:left;
+  background:var(--card);border:1px solid var(--line);
+  transition:border-color .18s,background .18s}
+.voice b{font-size:13px;font-weight:600;color:var(--ink)}
+.voice span{font-size:10.5px;color:var(--ink-3);letter-spacing:.02em}
+.voice:hover{background:var(--sand-l)}
+.voice.on{border-color:var(--sage);background:var(--sage-l)}
+.voice.on b{color:var(--sage-d)}
+.voice.off{opacity:.45}
 
 .works{display:flex;flex-direction:column;gap:9px}
 .work{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:16px;
@@ -162,6 +307,185 @@
   transition:opacity .2s,transform .2s;
   max-width:88vw;overflow:hidden;text-overflow:ellipsis}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+/* 时间线铺满时把提示条压到顶栏下面，别挡住标题 */
+.tl.open ~ .toast{top:calc(58px + var(--sat))}
+
+/* ---------- 编曲：全屏多轨时间线 ---------- */
+/* 暖白纸面上的一块手账：不是深色剪辑器，片段色只用低饱和的类别色 */
+body.tl-lock{overflow:hidden}
+
+.tl{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;
+  background:var(--paper);opacity:0;pointer-events:none;transform:translateY(12px);
+  transition:opacity .26s ease,transform .26s ease}
+.tl.open{opacity:1;pointer-events:auto;transform:none}
+.tl-top,.tl-body,.tl-bar{width:100%;max-width:560px}
+
+.tl-top{flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:calc(10px + var(--sat)) 16px 10px;border-bottom:1px solid var(--line)}
+.tl-heading{flex:1 1 auto;min-width:0;text-align:center}
+.tl-heading h3{font-family:var(--serif);font-size:17px;font-weight:600;letter-spacing:.08em;
+  color:var(--ink)}
+.tl-heading p{font-size:10.5px;color:var(--ink-3);letter-spacing:.02em;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-back{flex:0 0 auto;padding:6px 11px;border-radius:999px;font-size:11.5px;color:var(--ink-2);
+  border:1px solid var(--line-2);background:var(--card)}
+.tl-back:active{background:var(--sand-l)}
+.tl-topact{flex:0 0 auto;display:flex;align-items:center;gap:6px}
+.tl-play{padding:6px 12px;border-radius:999px;font-size:11.5px;color:var(--sage-d);
+  border:1px solid #DCE7D8;background:var(--sage-l);transition:background .18s,color .18s}
+.tl-play.on{color:#fff;background:var(--sage);border-color:transparent}
+.tl-done{padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;color:#fff;
+  background:var(--sage);box-shadow:0 4px 12px rgba(143,174,139,.26)}
+.tl-done:active{background:var(--sage-d);box-shadow:none}
+
+/* 轨道区独立滚动，时间尺吸顶 */
+.tl-body{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  /* 左右留白只加在滚动容器上：里面的 .tl-grid 宽度就是可排区域，JS 量它算播放头 */
+  padding:0 16px}
+.tl-grid{position:relative;min-height:100%;padding-bottom:10px}
+
+/* ---------- 时间尺 ---------- */
+.tl-ruler{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:84px 1fr;
+  background:linear-gradient(var(--paper) 78%,rgba(247,244,237,.85));
+  border-bottom:1px solid var(--line)}
+.tl-gutter{display:flex;align-items:flex-end;padding:0 0 5px 12px;
+  font-size:9px;letter-spacing:.12em;color:var(--ink-3)}
+.tl-ticks{position:relative;height:26px;cursor:pointer;touch-action:none}
+.tl-tick{position:absolute;bottom:0;width:1px;height:5px;background:#DCD3C3}
+.tl-tick.bar{height:10px;background:#C7BCA6}
+.tl-bar-no{position:absolute;top:3px;padding-left:3px;font-size:9px;letter-spacing:.04em;
+  color:var(--ink-3);pointer-events:none}
+
+/* ---------- 轨道 ---------- */
+.tl-rows{display:flex;flex-direction:column;gap:6px;padding:8px 0 0}
+.tl-row{display:grid;grid-template-columns:84px 1fr;align-items:stretch;min-height:44px}
+.tl-head{position:relative;display:flex;flex-direction:column;justify-content:center;gap:1px;
+  height:44px;padding:5px 26px 5px 10px;cursor:pointer;
+  border:1px solid var(--line);border-right:none;border-radius:12px 0 0 12px;
+  background:var(--paper-2);transition:background .18s,border-color .18s}
+.tl-row.on .tl-head{background:var(--sage-l);border-color:#CFDBC9}
+.tl-row.muted .tl-name,.tl-row.muted .tl-kind{opacity:.5}
+.tl-name{font-size:11px;font-weight:600;color:var(--ink);letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-kind{font-size:9px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 轨道静音：轨道头右下角的小喇叭，点亮 + 斜杠 = 这一轨暂时不出声 */
+.tl-mute{position:absolute;right:6px;bottom:5px;width:18px;height:18px;border-radius:50%;
+  display:grid;place-items:center;color:var(--ink-3);background:rgba(255,255,255,.72);
+  border:1px solid var(--line-2);transition:color .16s,background .16s,border-color .16s}
+.tl-mute svg{display:block;width:11px;height:11px}
+.tl-mute.on{color:#B27466;background:#F7E6DF;border-color:#E6C7BC}
+.tl-mute.on::after{content:'';position:absolute;left:50%;top:2px;width:1.6px;height:12px;
+  background:currentColor;border-radius:1px;transform:translateX(-50%) rotate(42deg)}
+.tl-del{position:absolute;right:4px;top:4px;width:19px;height:19px;border-radius:50%;
+  display:grid;place-items:center;font-size:9px;line-height:1;color:var(--ink-3);
+  background:#F0EBE1}
+.tl-del:active{background:#E7E1D4;color:var(--ink-2)}
+
+/* pan-y：横向拖片段归我们，竖向滑动照样能滚轨道区（否则手机上一划就被吃掉） */
+.tl-lane{position:relative;height:44px;overflow:hidden;touch-action:pan-y;
+  border:1px solid var(--line);border-left:none;border-radius:0 12px 12px 0;
+  background:rgba(62,58,51,.032);transition:background .18s,border-color .18s}
+.tl-row.on .tl-lane{background:rgba(143,174,139,.09);border-color:#DCE7D8}
+.tl-row.muted .tl-lane{opacity:.5}
+.tl-lane.soft{background:rgba(62,58,51,.018)}
+
+.tl-clip{position:absolute;top:8px;height:28px;border-radius:8px;overflow:hidden;
+  display:flex;align-items:center;padding:0 8px;cursor:grab;
+  /* 片段上直接拖：横竖都归我们（竖拖 = 换轨），别让浏览器把它当滚动 */
+  touch-action:none;
+  background:var(--c,#A7B7AD);box-shadow:inset 0 1px 0 rgba(255,255,255,.42);
+  transition:box-shadow .16s,transform .16s,opacity .12s;
+  will-change:left,width}
+.tl-clip:active{cursor:grabbing}
+.tl-clip.on{z-index:2;transform:translateY(-1px);
+  box-shadow:0 0 0 2px var(--sage-d),0 6px 14px rgba(120,110,90,.2)}
+.tl-clip.ghost{opacity:.5;pointer-events:none;box-shadow:none}
+.tl-clip.dragging{opacity:.72;cursor:grabbing}
+/* 片段单独静音：压暗 + 斜纹，一眼看出来这一段不出声 */
+.tl-clip.mute{opacity:.55}
+.tl-clip.mute::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,0) 3px 7px)}
+/* 正在发声：片段右上角亮一个小喇叭，播放头离开这一段就灭。
+   静音轨 / 静音段不会亮；单独试听时只有那一条轨会亮 */
+.tl-air{position:absolute;right:6px;top:50%;width:12px;height:12px;margin-top:-6px;
+  display:none;place-items:center;color:rgba(38,50,44,.72);pointer-events:none}
+.tl-air svg{display:block;width:12px;height:12px}
+.tl-clip.air{z-index:3;
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 3px 10px rgba(90,80,60,.22)}
+.tl-clip.air .tl-air{display:grid}
+.tl-clip.air .tl-clip-lab{margin-right:14px}
+/* 拖动片段时临时铺在轨道最下面的「新轨道」投放区：松手就用同一件乐器另起一轨 */
+.tl-row-new .tl-head{background:transparent;border:1px dashed #CBD6C4;border-right:none;
+  border-radius:12px 0 0 12px;padding-right:10px;cursor:default}
+.tl-row-new .tl-name{color:var(--sage-d)}
+.tl-row-new .tl-kind{color:var(--sage-d);opacity:.72}
+.tl-row-new .tl-lane{background:transparent;border:1px dashed #CBD6C4;border-left:none;
+  border-radius:0 12px 12px 0}
+/* 松手会落在这一条：整条轨亮起来 */
+.tl-row.tl-drop-on .tl-head{background:var(--sage-l);border-color:#CFDBC9}
+.tl-row.tl-drop-on .tl-lane{background:rgba(143,174,139,.18);border-color:#BFD1B8}
+.tl-row-new.tl-drop-on .tl-lane{background:rgba(143,174,139,.2)}
+.tl-clip-lab{font-size:9.5px;color:rgba(62,58,51,.72);letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;
+  font-variant-numeric:tabular-nums}
+/* 两端 12px 热区：真的能接到指针，桌面端才有左右箭头光标 */
+.tl-edge{position:absolute;top:0;bottom:0;width:12px;opacity:0;cursor:ew-resize;
+  transition:opacity .16s}
+.tl-edge.l{left:0;box-shadow:inset 2px 0 0 rgba(255,255,255,.7)}
+.tl-edge.r{right:0;box-shadow:inset -2px 0 0 rgba(255,255,255,.7)}
+.tl-clip.on .tl-edge,.tl-clip:hover .tl-edge{opacity:1}
+
+/* 主旋律参考轨：只读、压暗，固定在最后一行 */
+.tl-row-lead{opacity:.66}
+.tl-row-lead .tl-head{cursor:default;background:var(--sand-l);border-color:#EDE4D2}
+.tl-lane-lead{background:rgba(228,210,180,.16);border-color:#EDE4D2}
+.tl-note{position:absolute;top:16px;height:12px;border-radius:4px;background:var(--sand)}
+
+/* 播放头：贯穿时间尺与所有轨道，暂停时变虚线 */
+.tl-ph{position:absolute;top:0;bottom:0;left:0;width:1px;z-index:4;pointer-events:none;
+  background:var(--sage-d);will-change:transform}
+.tl-ph i{position:absolute;top:1px;left:50%;width:7px;height:7px;border-radius:50%;
+  background:var(--sage-d);transform:translateX(-50%)}
+.tl:not(.playing) .tl-ph{background:repeating-linear-gradient(
+  to bottom,var(--sage-d) 0 4px,rgba(111,143,108,0) 4px 8px)}
+.tl:not(.playing) .tl-ph i{background:var(--sage)}
+
+/* ---------- 底部操作条 ---------- */
+.tl-bar{flex:0 0 auto;display:flex;flex-direction:column;gap:7px;
+  padding:9px 14px calc(10px + var(--sab));border-top:1px solid var(--line);
+  background:var(--paper-2);box-shadow:0 -6px 18px rgba(120,110,90,.05)}
+.tl-bar-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tl-bar-k{font-size:10px;color:var(--ink-3);letter-spacing:.06em}
+.tl-bar-hint{font-size:11px;color:var(--ink-3);padding:2px 0}
+.tl-bar-hint.tl-live{color:var(--sage-d);font-weight:600}
+.tl-bar-tag{padding:3px 9px;border-radius:999px;font-size:10.5px;color:var(--sage-d);
+  background:var(--sage-l);border:1px solid #DCE7D8;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:56%}
+.tl-bar-gap{flex:1 1 auto}
+.tl-btn{flex:0 0 auto;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:500;
+  color:var(--ink-2);background:var(--card);border:1px solid var(--line-2)}
+.tl-btn:active{background:#F0EADF}
+.tl-btn.primary{color:#fff;background:var(--sage);border-color:transparent;
+  box-shadow:0 4px 12px rgba(143,174,139,.26)}
+.tl-btn.primary:active{background:var(--sage-d)}
+.tl-btn.soft{color:var(--ink-2)}
+.tl-btn.danger{color:#B27466;border-color:#EFDCD4}
+.tl-btn.on{color:#fff;background:var(--sage);border-color:transparent}
+/* 片段那几行动作多，按紧凑一点排，两行也好看 */
+.tl-bar-acts .tl-btn{padding:5px 9px;font-size:10.5px}
+.tl-btn.tiny{width:24px;height:24px;padding:0;border-radius:8px;
+  display:grid;place-items:center;font-size:13px;line-height:1}
+.tl-btn:disabled{opacity:.38}
+.tl-chip{flex:0 0 auto;padding:4px 10px;border-radius:999px;font-size:10.5px;color:var(--ink-2);
+  border:1px solid var(--line-2);background:var(--card);transition:background .16s,color .16s}
+.tl-chip.on{color:#fff;background:var(--sage);border-color:transparent}
+.tl-stepgrp{display:flex;align-items:center;gap:4px}
+.tl-val{min-width:30px;text-align:center;font-size:11.5px;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.tl-key{min-width:52px;text-align:center;font-size:11.5px;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.tl-seg{margin-left:auto}
 
 /* ---------- 组件级响应式 ---------- */
 @media (max-height:640px){
@@ -170,4 +494,9 @@
   .steps{margin-top:16px}
   .rec-stage{width:208px;height:208px}
   .rec-count{font-size:42px}
+}
+@media (max-width:360px){
+  /* 轨道头宽度必须和 timeline.js 的 HEAD_W 一致，这里只缩小字号 */
+  .tl-name{font-size:10.5px}
+  .tl-bar{padding-left:10px;padding-right:10px}
 }

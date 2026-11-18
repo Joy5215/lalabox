@@ -37,6 +37,11 @@
         <p class="idle-title">点我，唱一小段</p>
         <p class="idle-sub">跟着节拍随便哼 8 拍<br>剩下的鼓、贝斯、和弦交给我</p>
         <ol class="steps"><li class="on">唱</li><li>听</li><li>成曲</li></ol>
+        <div class="idle-alt">
+          <button class="link" id="btnDegrees">输入简谱</button>
+          <span class="idle-sep">·</span>
+          <button class="link" id="btnRandom">随机旋律</button>
+        </div>
       </div>
     </section>
 
@@ -64,15 +69,17 @@
       </div>
       <div class="panes">
         <div class="panel">
-          <div class="panel-title"><b>你的哼唱</b><span>它听成了这样</span></div>
+          <div class="panel-title"><b id="melodyTitle">你的哼唱</b><span>它听成了这样</span></div>
           <canvas id="cvMelody"></canvas>
         </div>
         <div class="panel">
-          <div class="panel-title"><b>你的乐队</b><span>自动配的伴奏</span></div>
+          <div class="panel-title">
+            <b>你的乐队</b><span id="bandSummary">还没有加乐器</span>
+            <button class="round-sm" id="btnBand" aria-label="添加乐器">＋</button>
+          </div>
           <canvas id="cvBand"></canvas>
         </div>
       </div>
-      <div class="styles" id="styleChips"></div>
       <div class="scan">
         <div class="scan-ring"></div>
         <div class="scan-text" id="scanText">正在听你的音高…</div>
@@ -142,6 +149,94 @@
   </div>
 </div>
 
+<!-- 主音色 -->
+<div class="sheet" id="sheetVoice">
+  <div class="sheet-body">
+    <div class="sheet-head"><h3>用什么声音唱</h3><button class="x" data-close>✕</button></div>
+    <p class="band-label">人声效果（叠在「我的原声」上）</p>
+    <div class="chip-row" id="voiceFxRow"></div>
+    <div class="voices" id="voiceList"></div>
+    <button class="btn primary wide" id="btnVoiceOk" style="max-width:none">就这样听</button>
+  </div>
+</div>
+
+<!-- 输入简谱：不用麦克风也能出旋律 -->
+<div class="sheet" id="sheetInput">
+  <div class="sheet-body">
+    <div class="sheet-head"><h3>输入简谱</h3><button class="x" data-close>✕</button></div>
+    <p class="sheet-hint">用 1-7 写音阶，0 是停顿。一个数字一拍，最多 16 拍。</p>
+    <div class="field">
+      <label for="degreeInput">数字简谱</label>
+      <input id="degreeInput" type="text" inputmode="text" autocomplete="off"
+        spellcheck="false" placeholder="例如 1 2 3 5 3 2 1">
+    </div>
+    <p class="sheet-hint" id="degreeHint">写几个数字试试</p>
+    <button class="btn primary wide" id="btnDegreeGo" style="max-width:none" disabled>按原谱生成</button>
+
+    <div class="var-block">
+      <p class="band-label">随机变奏 · 走向不动，只换节拍和音调</p>
+      <div class="chip-row" id="typedViews"></div>
+      <p class="band-label">速度</p>
+      <div class="pref-step" data-pref="tempo"></div>
+      <p class="band-label">音高</p>
+      <div class="pref-step" data-pref="pitch"></div>
+      <div class="rand-list" id="typedList"></div>
+      <div class="band-acts">
+        <button class="btn soft" id="btnTypedMore">换一版</button>
+        <button class="btn primary" id="btnTypedUse" disabled>就用这段</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 随机旋律：氛围 × 风格，一次给三段 -->
+<div class="sheet" id="sheetRandom">
+  <div class="sheet-body">
+    <div class="sheet-head"><h3>随机旋律</h3><button class="x" data-close>✕</button></div>
+    <p class="sheet-hint">先挑氛围，再挑风格，三段候选差别会拉得很开。点一段先试听（只有主旋律，一遍 8 拍），顺耳了再点「就用这段」。</p>
+    <p class="band-label">氛围</p>
+    <div class="chip-row" id="vibeRow"></div>
+    <p class="band-label">风格</p>
+    <div class="chip-row" id="styleRow"></div>
+    <p class="band-label">速度</p>
+    <div class="pref-step" data-pref="tempo"></div>
+    <p class="band-label">音高</p>
+    <div class="pref-step" data-pref="pitch"></div>
+    <div class="rand-list" id="randList"></div>
+    <div class="band-acts">
+      <button class="btn soft" id="btnRandMore">换一批</button>
+      <button class="btn primary" id="btnRandUse" disabled>就用这段</button>
+    </div>
+  </div>
+</div>
+
+<!-- 乐队面板：一栏看已加的（点一行换这件乐器的曲调），一栏挑新乐器 -->
+<div class="sheet" id="sheetBand">
+  <div class="sheet-body">
+    <div class="sheet-head"><h3>你的乐队</h3><button class="x" data-close>✕</button></div>
+
+    <p class="sheet-hint hide" id="bandHint"></p>
+
+    <!-- 最上面永远是全部「已经在响的」：乐器、人声、氛围混在一张清单里，
+         页签只影响下面「添加」区 -->
+    <p class="band-label" id="bandListLabel">已经加上的 · 点乐器名换它的曲调</p>
+    <div class="band-list" id="bandList"></div>
+
+    <p class="band-label">添加 · 示范</p>
+    <div class="band-tabs" id="bandTabs">
+      <button data-tab="inst" class="on">乐器</button>
+      <button data-tab="amb">氛围</button>
+      <button data-tab="demo">示范</button>
+    </div>
+
+    <div class="band-add" id="bandAdd"></div>
+
+    <div class="band-acts">
+      <button class="btn primary" id="btnBandOk">就这样</button>
+    </div>
+  </div>
+</div>
+
 <!-- 麦克风自检 -->
 <div class="sheet" id="sheetDiag">
   <div class="sheet-body">
@@ -151,6 +246,31 @@
   </div>
 </div>
 
+<!-- 编曲：全屏多轨时间线，片段在这里拖 / 裁 / 分割 -->
+<div class="tl" id="sheetEdit" aria-hidden="true">
+  <div class="tl-top">
+    <button class="tl-back" id="tlBack" type="button">返回</button>
+    <div class="tl-heading">
+      <h3>编曲</h3>
+      <p id="tlMeta">—</p>
+    </div>
+    <div class="tl-topact">
+      <button class="tl-play" id="tlPlay" type="button">播放</button>
+      <button class="tl-done" id="tlDone" type="button">完成</button>
+    </div>
+  </div>
+
+  <div class="tl-body">
+    <div class="tl-grid" id="tlGrid">
+      <div class="tl-ruler" id="tlRuler"></div>
+      <div class="tl-rows" id="tlRows"></div>
+      <div class="tl-ph" id="tlPh"><i></i></div>
+    </div>
+  </div>
+
+  <div class="tl-bar" id="tlBar"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="js/core/utils.js"></script>
@@ -158,10 +278,15 @@
 <script src="js/music/arrange.js"></script>
 <script src="js/music/codec.js"></script>
 <script src="js/music/analyze.js"></script>
+<script src="js/music/groove.js"></script>
+<script src="js/music/timbres.js"></script>
+<script src="js/music/styles.js"></script>
 <script src="js/music/compose.js"></script>
+<script src="js/audio/ambience.js"></script>
 <script src="js/audio/engine.js"></script>
 <script src="js/core/diag.js"></script>
 <script src="js/ui/draw.js"></script>
+<script src="js/ui/timeline.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

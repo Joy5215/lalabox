@@ -39,7 +39,6 @@
   .result-head{grid-column:1 / -1}
   .panes{grid-column:1 / -1;grid-template-rows:1fr;
     grid-template-columns:1.12fr .88fr;gap:16px}
-  .styles{grid-column:1 / -1;justify-content:center}
   .idle-wrap{min-height:54vh}
   .mic{width:190px;height:190px}
 }

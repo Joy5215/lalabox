@@ -97,7 +97,12 @@
       lines.push('申请结果    失败');
       lines.push('name        ' + (e && e.name || '-'));
       lines.push('message     ' + (e && e.message || e));
-      lines.push('结论        麦克风没拿到：授权被拒 / 平台未开放 / 非安全上下文');
+      if (!window.isSecureContext) {
+        lines.push('结论        当前是 http 地址，浏览器直接禁用了麦克风');
+        lines.push('处理        换 https 打开（隧道或受信任证书），http://局域网IP 无效');
+      } else {
+        lines.push('结论        麦克风没拿到：授权被拒 / 平台未开放');
+      }
       L.Bridge.releaseMic();
       return lines;
     });

@@ -1,0 +1,22 @@
+{
+  "name": "lalabox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "哼两句，就成歌 —— 纯前端零构建的 AI 编曲小样（本地计算 + Web Audio 合成）",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "node tools/serve.js",
+    "serve": "node tools/serve.js",
+    "tunnel": "node tools/tunnel.js",
+    "test": "node tools/smoke-test.js",
+    "e2e": "node tools/e2e.js",
+    "e2e:headless": "node tools/e2e.js --headless",
+    "assets": "node tools/make-assets.js",
+    "pack": "node tools/pack.js",
+    "push": "node tools/push.js",
+    "sync": "node tools/git-sync.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,8 +1,22 @@
-.codebuddy/
-.DS_Store
-Thumbs.db
-*.log
-
+# 依赖与构建产物
+node_modules/
 dist/
+
+# 运行期生成（本地服务 / 隧道 / 推预览）
 .server.pid
 .latest-preview
+*.log
+
+# 自测与排障产物
+tools/.shots/
+tools/.dump/
+
+# 误生成文件（PowerShell 的 2>$null 在 cmd/bash 下会落成字面文件）
+$null
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+
+# 项目数据（CodeBuddy，勿删）
+.codebuddy/
